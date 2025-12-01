@@ -46,7 +46,8 @@ function App() {
         debt_to_capital_ratio: inputs.debt_to_capital_ratio / 100,
       };
 
-      const response = await axios.post('http://localhost:8000/calculate', payload);
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const response = await axios.post(`${apiUrl}/calculate`, payload);
       setResult(response.data);
     } catch (error) {
       console.error("Error calculating valuation:", error);
