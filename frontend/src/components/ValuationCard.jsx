@@ -2,11 +2,27 @@ import React from 'react';
 import { TrendingUp, Banknote, PieChart } from 'lucide-react';
 
 const formatCurrency = (value) => {
+    // Convert to Crores (1 Crore = 10,000,000)
+    const inCrores = value / 10000000;
+
+    // If value is small (like share price), keep it absolute
+    // But user asked for Equity Value in Crores.
+    // Let's make a smart formatter.
+
+    // Actually, user said "keep equity value in crore".
+    // Share price should probably be absolute Rupees.
+
     return new Intl.NumberFormat('en-IN', {
         style: 'currency',
         currency: 'INR',
-        maximumFractionDigits: 0,
-    }).format(value).replace('₹', '₹ '); // Ensure space
+        maximumFractionDigits: 2,
+        minimumFractionDigits: 2,
+    }).format(value).replace('₹', '₹ ');
+};
+
+const formatCrores = (value) => {
+    // Value is already in Crores from backend
+    return `₹ ${value.toFixed(2)} Cr`;
 };
 
 const ResultCard = ({ title, value, subtext, icon: Icon, color = "text-primary" }) => (
@@ -37,17 +53,17 @@ const ValuationCard = ({ result }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <ResultCard
                     title="Share Price"
-                    value={formatCurrency(result.share_price)}
-                    subtext="Intrinsic Value per Share"
+                    value={result.share_price < 0 ? "₹ 0.00" : formatCurrency(result.share_price)}
+                    subtext={result.share_price < 0 ? "⚠️ Insolvency Risk (Debt > Assets)" : "Intrinsic Value per Share"}
                     icon={Banknote}
-                    color="text-emerald-400"
+                    color={result.share_price < 0 ? "text-red-400" : "text-emerald-400"}
                 />
                 <ResultCard
                     title="Equity Value"
-                    value={formatCurrency(result.equity_value)}
+                    value={formatCrores(result.equity_value)}
                     subtext="Total Market Cap Implied"
                     icon={TrendingUp}
-                    color="text-blue-400"
+                    color={result.equity_value < 0 ? "text-red-400" : "text-blue-400"}
                 />
             </div>
 
@@ -56,15 +72,15 @@ const ValuationCard = ({ result }) => {
                 <div className="space-y-3">
                     <div className="flex justify-between text-sm">
                         <span className="text-slate-400">Enterprise Value</span>
-                        <span className="text-white font-medium">{formatCurrency(result.enterprise_value)}</span>
+                        <span className="text-white font-medium">{formatCrores(result.enterprise_value)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                         <span className="text-slate-400">PV of Explicit Period</span>
-                        <span className="text-white font-medium">{formatCurrency(result.sum_pv_fcff)}</span>
+                        <span className="text-white font-medium">{formatCrores(result.sum_pv_fcff)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                         <span className="text-slate-400">PV of Terminal Value</span>
-                        <span className="text-white font-medium">{formatCurrency(result.present_value_terminal_value)}</span>
+                        <span className="text-white font-medium">{formatCrores(result.present_value_terminal_value)}</span>
                     </div>
                     <div className="h-px bg-slate-700 my-2"></div>
                     <div className="flex justify-between text-sm">
@@ -89,9 +105,9 @@ const ValuationCard = ({ result }) => {
                         {result.projections.map((p) => (
                             <tr key={p.year} className="border-b border-slate-800/50">
                                 <td className="py-2">{p.year}</td>
-                                <td className="py-2">{formatCurrency(p.revenue)}</td>
-                                <td className="py-2">{formatCurrency(p.fcff)}</td>
-                                <td className="py-2 text-emerald-400">{formatCurrency(p.present_value_fcff)}</td>
+                                <td className="py-2">{formatCrores(p.revenue)}</td>
+                                <td className="py-2">{formatCrores(p.fcff)}</td>
+                                <td className="py-2 text-emerald-400">{formatCrores(p.present_value_fcff)}</td>
                             </tr>
                         ))}
                     </tbody>

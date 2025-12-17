@@ -4,3 +4,5 @@ pydantic
 pandas
 numpy
 openpyxl
+yfinance
+requests

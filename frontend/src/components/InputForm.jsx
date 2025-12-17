@@ -52,6 +52,8 @@ const InputField = ({ label, name, value, onChange, type = "number", step = "any
     );
 };
 
+import SearchBar from './SearchBar';
+
 const InputForm = ({ inputs, setInputs, onCalculate, loading }) => {
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -61,12 +63,21 @@ const InputForm = ({ inputs, setInputs, onCalculate, loading }) => {
         }));
     };
 
+    const handleDataFetched = (data) => {
+        setInputs(prev => ({
+            ...prev,
+            ...data
+        }));
+    };
+
     return (
         <div className="h-full overflow-y-auto pr-4 custom-scrollbar">
             <div className="mb-8">
                 <h2 className="text-2xl font-bold text-white mb-2">Valuation Parameters</h2>
-                <p className="text-slate-400">Enter the company details below.</p>
+                <p className="text-slate-400">Enter the company details below or search for a ticker.</p>
             </div>
+
+            <SearchBar onDataFetched={handleDataFetched} />
 
             <InputGroup title="Company Basics">
                 <InputField
@@ -82,7 +93,7 @@ const InputForm = ({ inputs, setInputs, onCalculate, loading }) => {
                     onChange={handleChange}
                 />
                 <InputField
-                    label="Shares Outstanding"
+                    label="Shares Outstanding (Absolute Number)"
                     name="shares_outstanding"
                     value={inputs.shares_outstanding}
                     onChange={handleChange}

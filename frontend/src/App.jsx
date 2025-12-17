@@ -13,9 +13,9 @@ function App() {
     total_debt: 1, // Crores
     tax_rate: 25, // %
     growth_period_years: 10,
-    revenue_growth_rate: 15, // %
+    revenue_growth_rate: 0, // % - User must enter their own projection
     terminal_growth_rate: 5, // %
-    target_operating_margin: 25, // %
+    target_operating_margin: 0, // % - User must enter their own target
     sales_to_capital_ratio: 1.5,
     risk_free_rate: 7.2, // %
     beta: 1.0,

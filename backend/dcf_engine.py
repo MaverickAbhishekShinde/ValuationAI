@@ -137,8 +137,24 @@ class DCFEngine:
         
         # Equity Value = Enterprise Value + Cash - Debt
         equity_value = enterprise_value + inputs.cash_and_equivalents - inputs.total_debt
-        share_price = equity_value / inputs.shares_outstanding
         
+        # Share Price Calculation
+        # Equity Value is in Crores (10,000,000).
+        # Shares Outstanding is Absolute.
+        # Share Price (INR) = (Equity Value (Cr) * 10,000,000) / Shares Outstanding
+        
+        absolute_equity_value = equity_value * 10_000_000
+        
+        if inputs.shares_outstanding > 0:
+            share_price = absolute_equity_value / inputs.shares_outstanding
+        else:
+            share_price = 0.0
+            
+        # Sanity Check for Share Price
+        # If share price is abnormally high (e.g. > 200,000 INR), it's suspicious for a standard stock split adjusted share.
+        # But MRF is ~1,00,000. So allow up to a limit, but purely as a sanity log.
+        # For now, we trust the calculation because inputs are normalized.
+
         return ValuationResult(
             projections=projections,
             terminal_value=terminal_value,
