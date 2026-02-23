@@ -1,0 +1,188 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&display=swap');
+
+@import "tailwindcss";
+
+@theme {
+  --color-brand: #6366F1;
+  --color-positive: #10B981;
+  --color-negative: #EF4444;
+
+  /* Dark Mode specific mappings for utilities */
+  --color-slate-950: #0A0A0F;
+  --color-slate-900: #111118;
+  --color-slate-800: #1E1E2E;
+  --color-slate-700: #2E2E3E;
+  --color-slate-400: #64748B;
+  --color-white: #F1F5F9;
+
+  /* Brand overrides for existing code if any */
+  --color-brand-400: #6366F1;
+  --color-brand-500: #6366F1;
+  --color-brand-600: #4F46E5;
+
+  --font-mono: "DM Mono", "JetBrains Mono", ui-monospace, monospace;
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  --bg-color: #F8FAFC;
+  --surface-color: #FFFFFF;
+  --border-color: #E2E8F0;
+  --text-primary: #0F172A;
+  --text-secondary: #64748B;
+  --panel-center: #F1F5F9;
+}
+
+.dark {
+  --bg-color: #0A0A0F;
+  --surface-color: #111118;
+  --border-color: #1E1E2E;
+  --text-primary: #F1F5F9;
+  --text-secondary: #94A3B8;
+  --panel-center: #030712;
+}
+
+@layer base {
+  body {
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    font-family: var(--font-sans);
+    min-height: 100vh;
+    background-image: radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0);
+    background-size: 24px 24px;
+    background-attachment: fixed;
+  }
+
+  /* Dot grid pattern opacity */
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, var(--text-secondary) 1px, transparent 1px);
+    background-size: 32px 32px;
+    opacity: 0.03;
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-sans);
+    font-weight: 700;
+  }
+}
+
+@layer components {
+  .glass-card {
+    background-color: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 0.75rem;
+  }
+
+  .glass-input {
+    background-color: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+    color: var(--text-primary);
+  }
+
+  .glass-input:focus {
+    outline: none;
+    border-color: var(--color-brand);
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+  }
+
+  .panel-container {
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--border-color);
+    border-radius: 9999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--text-secondary);
+  }
+}
+
+input[type="range"] {
+  accent-color: #6366F1;
+  background-color: var(--border-color);
+  height: 0.25rem;
+  border-radius: 0.5rem;
+  appearance: none;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 1rem;
+  height: 1rem;
+  background-color: #6366F1;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4);
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 0 6px rgba(99, 102, 241, 0.1);
+}
+
+.resizer-h {
+  width: 6px;
+  cursor: col-resize;
+  background-color: transparent;
+  transition: background-color 0.2s;
+  z-index: 40;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.resizer-h::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background-color: var(--border-color);
+  transform: translateX(-50%);
+  transition: all 0.2s;
+}
+
+.resizer-h:hover::after,
+.resizer-h:active::after {
+  background-color: var(--color-brand);
+  width: 2px;
+}
+
+.resizer-h:hover {
+  background-color: rgba(99, 102, 241, 0.05);
+}

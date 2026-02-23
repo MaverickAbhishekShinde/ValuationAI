@@ -1,8 +1,0 @@
-fastapi
-uvicorn
-pydantic
-pandas
-numpy
-openpyxl
-yfinance
-requests
