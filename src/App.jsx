@@ -54,24 +54,24 @@ function cn(...inputs) {
 // --- Defaults ---
 const INITIAL_INPUTS = {
     // Company Basics
-    company_name: "Infosys Limited",
-    ticker: "INFY",
-    current_price: 1800,
-    shares_outstanding: 416,
-    cash: 15456,
-    debt: 8527,
+    company_name: "",
+    ticker: "",
+    current_price: 0,
+    shares_outstanding: 0,
+    cash: 0,
+    debt: 0,
     minority_interests: 0,
     non_operating_assets: 0,
 
     // Growth
-    revenue_base: 153670,
-    ebit_base: 35140,
-    revenue_growth_yr1: 0.08,
+    revenue_base: 0,
+    ebit_base: 0,
+    revenue_growth_yr1: 0.10,
     revenue_growth_yr2_5: 0.10,
 
     // Profitability
-    operating_margin_base: 0.22,
-    operating_margin_target: 0.23,
+    operating_margin_base: 0.15,
+    operating_margin_target: 0.15,
     margin_convergence_year: 5,
 
     // Tax
@@ -149,12 +149,14 @@ const SourceLink = ({ source, isDarkMode, onShowSource }) => (
 
 const InputField = ({ label, value, onChange, type = "number", step = "0.01", min, max, isAi = true, aiData = null, onOverride, tooltip, isPercentage = false, isLive = false, isFetching = false, helperText, onShowSource, isDarkMode = true, placeholder }) => {
     const displayValue = isFetching ? "" : (isPercentage ? (value * 100).toFixed(1) : value);
-    const finalTooltip = (aiData?.reasoning || tooltip || "No reasoning provided") + (aiData?.adjusted ? " (adjusted)" : "");
 
     return (
         <div className="mb-4 group">
             <div className="flex items-center justify-between mb-1.5">
-                <label className="text-[11px] font-medium text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                <label className={cn(
+                    "text-[11px] font-bold uppercase tracking-widest flex items-center gap-1.5 transition-colors",
+                    isDarkMode ? "text-slate-500" : "text-slate-600"
+                )}>
                     {label}
                     {isLive && (
                         <span className="flex items-center gap-1 text-[9px] text-emerald-400 font-bold bg-emerald-500/10 px-1 rounded border border-emerald-500/20">
@@ -162,46 +164,47 @@ const InputField = ({ label, value, onChange, type = "number", step = "0.01", mi
                             LIVE
                         </span>
                     )}
-                    {(aiData || tooltip || aiData?.source) && (
+                    {(aiData || tooltip) && (
                         <div className="relative group/tooltip">
-                            <Info className="w-3 h-3 cursor-help text-slate-600 hover:text-slate-400 transition-colors" />
+                            <Info className="w-3.5 h-3.5 cursor-help text-slate-500 hover:text-brand-500 transition-colors" />
                             <div className={cn(
-                                "absolute bottom-full left-0 mb-2 w-64 p-4 text-[10px] rounded-[20px] opacity-0 group-hover/tooltip:opacity-100 pointer-events-none transition-all z-50 shadow-[0_20px_50px_rgba(0,0,0,0.5)] border translate-y-2 group-hover/tooltip:translate-y-0",
+                                "absolute bottom-full left-0 mb-3 w-72 p-5 text-[11px] rounded-2xl opacity-0 group-hover/tooltip:opacity-100 pointer-events-none transition-all z-50 shadow-2xl border translate-y-2 group-hover/tooltip:translate-y-0",
                                 isDarkMode ? "bg-slate-900 text-slate-200 border-slate-800" : "bg-white text-slate-700 border-slate-200"
                             )}>
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="font-bold uppercase tracking-[0.1em] text-slate-500 text-[9px]">{label}</span>
+                                <div className="flex items-center justify-between mb-3">
+                                    <span className="font-bold uppercase tracking-[0.15em] text-brand-500 text-[9px]">{label}</span>
                                     {aiData?.confidence && <ConfidenceBadge confidence={aiData.confidence} />}
                                 </div>
-                                <p className="leading-relaxed text-slate-300 mb-4 pr-2">
-                                    {aiData?.reasoning || tooltip || "AI estimated based on industry data for this sector."}
-                                    {aiData?.adjusted && <span className="text-brand ml-1 font-bold">(adjusted)</span>}
+                                <p className={cn(
+                                    "leading-relaxed font-medium mb-4 pr-2",
+                                    isDarkMode ? "text-slate-300" : "text-slate-600"
+                                )}>
+                                    {aiData?.reasoning || tooltip || "No description provided."}
+                                    {aiData?.adjusted && <span className="text-brand ml-1 font-bold">(automatically adjusted to bounds)</span>}
                                 </p>
-                                <div className="pt-3 border-t border-slate-800/60 flex flex-col gap-2">
-                                    <p className="text-[9px] text-slate-500 font-medium italic">Click pencil icon to override this assumption</p>
-                                    {aiData?.source && <SourceLink source={aiData.source} isDarkMode={isDarkMode} onShowSource={onShowSource} />}
-                                </div>
+                                {(aiData?.source || onOverride) && (
+                                    <div className={cn("pt-3 border-t flex flex-col gap-2", isDarkMode ? "border-slate-800" : "border-slate-100")}>
+                                        {onOverride && <p className="text-[9px] text-slate-500 font-bold italic uppercase tracking-tighter">Click pencil icon to manually override</p>}
+                                        {aiData?.source && <SourceLink source={aiData.source} isDarkMode={isDarkMode} onShowSource={onShowSource} />}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}
                 </label>
                 <div className="flex items-center gap-2">
-                    {isAi && aiData ? (
+                    {aiData && (
                         <ConfidenceBadge confidence={aiData.confidence} />
-                    ) : isAi ? (
-                        <Badge className="bg-brand/15 text-brand flex items-center gap-1 border border-brand/20">
-                            <Sparkles className="w-2.5 h-2.5" /> AI
-                        </Badge>
-                    ) : null}
+                    )}
                     {onOverride && (
                         <button
                             onClick={onOverride}
                             className={cn(
-                                "p-1 rounded-md transition-colors",
-                                isAi ? "text-slate-600 hover:text-slate-400 hover:bg-slate-800" : "text-brand-400 bg-brand-400/10"
+                                "p-1.5 rounded-lg transition-all",
+                                isAi ? "text-slate-600 hover:text-brand-400 hover:bg-brand/10 border border-transparent hover:border-brand/20" : "text-brand-400 bg-brand/10 border border-brand/20"
                             )}
                         >
-                            <Pencil className="w-3 h-3" />
+                            <Pencil className="w-3.5 h-3.5" />
                         </button>
                     )}
                 </div>
@@ -363,7 +366,7 @@ const Footer = ({ isDarkMode = true }) => (
         <div className="max-w-4xl mx-auto px-4">
             <p className="text-xs uppercase tracking-[0.2em] mb-2 font-semibold">Disclaimer</p>
             <p className="text-[10px] leading-relaxed max-w-2xl mx-auto italic">
-                BSE/NSE listed companies only. Not SEBI registered. Not investment advice. This tool is for educational purposes. Valuation models are highly sensitive to inputs; small changes in assumptions can lead to wildly different results. Always do your own due diligence.
+                BSE/NSE listed companies only. Not SEBI registered. AI-generated assumptions are estimates only and can be inaccurate—always verify against official annual reports (FY23/24). Valuation models are highly sensitive; small changes in WACC or growth can lead to wildly different results.
             </p>
             <div className="mt-8 flex items-center justify-center gap-6 grayscale opacity-50">
                 <div className={cn("h-4 w-px", isDarkMode ? "bg-slate-800" : "bg-slate-300")} />
@@ -379,7 +382,11 @@ const CountUp = ({ value, prefix = "", suffix = "", decimals = 2 }) => {
     const display = useTransform(count, (v) => `${prefix}${v.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}${suffix}`);
 
     useEffect(() => {
-        count.set(value);
+        if (typeof value === 'number' && isFinite(value)) {
+            count.set(value);
+        } else {
+            count.set(0);
+        }
     }, [value, count]);
 
     return <motion.span className="font-mono">{display}</motion.span>;
@@ -567,33 +574,51 @@ export default function App() {
     };
 
     const validateBounds = (key, val) => {
+        if (typeof val !== 'number' || isNaN(val)) return { val: 0, adjusted: true };
+
         const bounds = {
-            revenue_growth_yr1: { min: 0.0, max: 0.4 },
-            revenue_growth_yr2_5: { min: 0.0, max: 0.4 },
-            operating_margin_target: { min: 0, max: 0.6 },
-            wacc: { min: 0.09, max: 0.2 },
+            revenue_growth_yr1: { min: -0.2, max: 0.6 },
+            revenue_growth_yr2_5: { min: -0.2, max: 0.6 },
+            operating_margin_base: { min: -0.2, max: 0.8 },
+            operating_margin_target: { min: 0, max: 0.8 },
+            wacc: { min: 0.06, max: 0.25 },
+            riskfree_rate: { min: 0.01, max: 0.12 },
+            sales_to_capital_1_5: { min: 0.1, max: 10.0 },
+            sales_to_capital_6_10: { min: 0.1, max: 10.0 },
             prob_failure: { min: 0, max: 1.0 },
         };
+
+        let result = val;
+        let adjusted = false;
+
+        // Auto-fix: if AI returns percentage as integer (e.g. 15 instead of 0.15)
+        // Applicaple to specific rate keys
+        const rateKeys = ['revenue_growth_yr1', 'revenue_growth_yr2_5', 'operating_margin_base', 'operating_margin_target', 'wacc', 'riskfree_rate', 'tax_rate_effective', 'tax_rate_marginal', 'prob_failure'];
+        if (rateKeys.includes(key) && Math.abs(result) > 1.0) {
+            console.warn(`Auto-correcting ${key} from ${result} to ${result / 100}`);
+            result /= 100;
+            adjusted = true;
+        }
+
         const b = bounds[key];
-        if (!b) return { val, adjusted: false };
-        if (val < b.min) return { val: b.min, adjusted: true };
-        if (val > b.max) return { val: b.max, adjusted: true };
-        return { val, adjusted: false };
+        if (b) {
+            if (result < b.min) { result = b.min; adjusted = true; }
+            if (result > b.max) { result = b.max; adjusted = true; }
+        }
+
+        return { val: result, adjusted };
     };
 
     const generateAssumptions = async () => {
         if (!searchQuery) return;
         setIsLoadingAI(true);
         setAiError(null);
-        // Clear previous price immediately
-        setInputs(prev => ({ ...prev, current_price: "" }));
-        setAiOriginalValues(null);
+
+        const formattedTicker = searchQuery.trim().toUpperCase();
+        const queryWithSuffix = (formattedTicker.includes('.') || formattedTicker.includes(':')) ? formattedTicker : `${formattedTicker}.NS`;
+        setSearchQuery(queryWithSuffix);
+
         try {
-
-            const formattedTicker = searchQuery.trim().toUpperCase();
-            const queryWithSuffix = (formattedTicker.includes('.') || formattedTicker.includes(':')) ? formattedTicker : `${formattedTicker}.NS`;
-            setSearchQuery(queryWithSuffix);
-
             // RAG Context Retrieval
             let ragContext = "";
             const sourcesMap = {};
@@ -616,18 +641,22 @@ export default function App() {
                 ragContext = `\n\nUse the following excerpts from the company's internal documents to inform your assumptions:\n${contextChunks.join("\n")}\n\nWhen using RAG context, if an assumption is directly supported by a source, include "SOURCE: filename-chunkIndex" at the VERY END of the reasoning string for that assumption.`;
             }
 
-            const systemPrompt = `You are a financial analyst specializing in Indian equity markets. 
-            Return all financial figures in INR Crores (1 Crore = 10 million INR). 
-            Return current_price in INR per share. 
-            Return shares_outstanding in Crores. Use BSE/NSE data. 
-            Risk-free rate should reflect India 10-year G-Sec yield (~7.1%). 
-            Country risk premium for India is approximately 2%. 
-            WACC for Indian companies typically ranges from 10-18%.
-            Return current_price: DO NOT return this value. The user will enter it manually.
-            Return ONLY valid JSON. No markdown, no explanation outside the JSON.
-            All values must be realistic: revenue growth 0–40% for Indian growth companies, 
-            wacc between 0.09 and 0.20, margins between 0 and 0.50.
-            Base your reasoning on publicly known information about the company.${ragContext}`;
+            const systemPrompt = `You are a world-class equity research analyst specializes in the Indian markets (NSE/BSE).
+            
+            KNOWLEDGE UPDATE 2024:
+            - ITC (ITC.NS): ~1240 Cr shares. Rev ~70k Cr. Profit ~20k Cr.
+            - Zomato (ZOMATO.NS): ~880 Cr shares. Rev ~12k Cr. Net profit turned positive recently.
+            - Tata Power (TATAPOWER.NS): ~320 Cr shares. 
+            
+            STRICT RULES:
+            1. All numbers MUST be in INR Crores (1 Cr = 10 million). 
+            2. Shares Outstanding MUST be in Crores.
+            3. Use LATEST FY24 estimates where possible.
+            4. Revenue Growth bounds: -20% to +100%. 
+            5. WACC typically 10-15% for Indian large caps.
+            6. Margin convergence over 5-10 years.
+            
+            Return ONLY valid JSON. No markdown. No reasoning outside the JSON.`;
 
             const userPrompt = `Generate DCF valuation assumptions for ${queryWithSuffix}.
             Return this exact JSON structure:
@@ -641,23 +670,45 @@ export default function App() {
               "debt": number,
               "minority_interests": number,
               "non_operating_assets": number,
-              "revenue_growth_yr1": { "value": number, "confidence": "high"|"medium"|"low", "reasoning": "string max 100 chars" },
-              "revenue_growth_yr2_5": { "value": number, "confidence": "high"|"medium"|"low", "reasoning": "string max 100 chars" },
-              "operating_margin_base": { "value": number, "reasoning": "string" },
-              "operating_margin_target": { "value": number, "confidence": "high"|"medium"|"low", "reasoning": "string max 100 chars" },
-              "margin_convergence_year": { "value": number, "reasoning": "string" },
-              "sales_to_capital_1_5": { "value": number, "confidence": "high"|"medium"|"low", "reasoning": "string max 100 chars" },
-              "wacc": { "value": number, "confidence": "high"|"medium"|"low", "reasoning": "string max 100 chars" },
-              "riskfree_rate": { "value": number, "reasoning": "string" },
-              "tax_rate_effective": { "value": number, "reasoning": "string" },
-              "tax_rate_marginal": { "value": number, "reasoning": "string" },
-              "prob_failure": { "value": number, "reasoning": "string" },
+              "revenue_growth_yr1": { "value": number, "confidence": "high"|"medium"|"low", "reasoning": "string max 80 chars" },
+              "revenue_growth_yr2_5": { "value": number, "confidence": "high"|"medium"|"low", "reasoning": "string max 80 chars" },
+              "operating_margin_base": { "value": number, "reasoning": "string max 80 chars" },
+              "operating_margin_target": { "value": number, "confidence": "high"|"medium"|"low", "reasoning": "string max 80 chars" },
+              "margin_convergence_year": { "value": number, "reasoning": "string max 80 chars" },
+              "sales_to_capital_1_5": { "value": number, "confidence": "high"|"medium"|"low", "reasoning": "string max 80 chars" },
+              "sales_to_capital_6_10": { "value": number, "reasoning": "string max 80 chars" },
+              "wacc": { "value": number, "confidence": "high"|"medium"|"low", "reasoning": "string max 80 chars" },
+              "riskfree_rate": { "value": number, "reasoning": "string max 80 chars" },
+              "tax_rate_effective": { "value": number, "reasoning": "string max 80 chars" },
+              "tax_rate_marginal": { "value": number, "reasoning": "string max 80 chars" },
+              "prob_failure": { "value": number, "reasoning": "string max 80 chars" },
               "narrative": "2-3 sentence bull case story for this company"
-            }`;
+            }
+            IMPORTANT: Keep reasoning strings SHORT (under 80 chars). Return ONLY the JSON object.`;
 
-            const result = await model.generateContent([systemPrompt, userPrompt]);
-            const response = await result.response;
-            let text = response.text();
+            const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${import.meta.env.VITE_GROQ_API_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    model: 'llama-3.3-70b-versatile',
+                    messages: [
+                        { role: 'system', content: systemPrompt },
+                        { role: 'user', content: userPrompt }
+                    ],
+                    temperature: 0.3,
+                    max_tokens: 2048
+                })
+            });
+            const groqData = await groqResponse.json();
+            
+            if (groqData.error) {
+                throw new Error(groqData.error.message || "Groq API Error");
+            }
+            
+            let text = groqData.choices[0].message.content;
 
             let data;
             try {
@@ -678,6 +729,13 @@ export default function App() {
             if (data.ebit && !data.ebit_base) data.ebit_base = data.ebit;
             if (data.shares && !data.shares_outstanding) data.shares_outstanding = data.shares;
 
+            // Extract nested values for flat fields (AI sometimes returns {value, reasoning} for these too)
+            ['revenue_base', 'ebit_base', 'cash', 'debt', 'shares_outstanding', 'minority_interests', 'non_operating_assets'].forEach(k => {
+                if (typeof data[k] === 'object' && data[k] !== null && 'value' in data[k]) {
+                    data[k] = Number(data[k].value);
+                }
+            });
+
             // Unit Validation: Normalize financials (₹ Cr)
             if (data.revenue_base > 10000000) {
                 console.warn("Detected absolute INR revenue. Normalizing to ₹ Crores.");
@@ -693,7 +751,38 @@ export default function App() {
                 data.shares_outstanding /= 10000000;
             }
 
-            const newInputs = { ...inputs, current_price: "" }; // Ensure price stays clear
+            // Calculate base margin if missing or zero, but EBIT/Revenue are present
+            const marginVal = typeof data.operating_margin_base === 'object' ? data.operating_margin_base.value : data.operating_margin_base;
+            if (data.revenue_base && data.ebit_base && (!marginVal || marginVal === 0)) {
+                const calculatedMargin = data.ebit_base / data.revenue_base;
+                console.log(`Calculating base margin from EBIT/Rev: ${calculatedMargin}`);
+                data.operating_margin_base = { 
+                    value: calculatedMargin, 
+                    reasoning: `Calculated from Base EBIT (${data.ebit_base}) / Revenue (${data.revenue_base})` 
+                };
+            }
+
+            // Mirror sales_to_capital if only one is provided
+            if (data.sales_to_capital_1_5 && !data.sales_to_capital_6_10) {
+                const s2cVal = typeof data.sales_to_capital_1_5 === 'object' ? data.sales_to_capital_1_5.value : data.sales_to_capital_1_5;
+                data.sales_to_capital_6_10 = typeof data.sales_to_capital_1_5 === 'object'
+                    ? { value: s2cVal, reasoning: "Assumed same as years 1-5" }
+                    : s2cVal;
+            }
+
+            // Final sanity: ensure critical numbers are valid
+            const criticalKeys = ['revenue_base', 'ebit_base', 'shares_outstanding'];
+            for (const k of criticalKeys) {
+                const v = typeof data[k] === 'object' ? data[k]?.value : data[k];
+                if (!v || isNaN(Number(v)) || Number(v) <= 0) {
+                    console.error(`Critical field '${k}' is invalid:`, data[k]);
+                    setAiError(`AI returned invalid data for '${k}'. Please try again.`);
+                    setIsLoadingAI(false);
+                    return;
+                }
+            }
+
+            const newInputs = { ...inputs, current_price: "" }; 
             const newDetails = {};
             const newAiGenerated = {};
 
@@ -878,14 +967,37 @@ export default function App() {
     };
 
     const result = useMemo(() => {
+        // Guard: don't run DCF if critical inputs are zero/missing
+        if (!inputs.revenue_base || !inputs.shares_outstanding || inputs.shares_outstanding <= 0) {
+            return {
+                intrinsic_value_per_share: 0,
+                upside_pct: 0,
+                value_equity: 0,
+                value_operating_assets: 0,
+                pv_terminal_value: 0,
+                pv_cf_10years: 0,
+                yearByYear: [],
+                terminalYear: {},
+            };
+        }
         console.log("RUNNING DCF WITH INPUTS:", inputs);
-        return runDCF(inputs);
+        const dcfResult = runDCF(inputs);
+        // Guard against NaN propagation
+        if (isNaN(dcfResult.intrinsic_value_per_share) || !isFinite(dcfResult.intrinsic_value_per_share)) {
+            console.warn("DCF produced NaN/Infinity. Returning zero.", dcfResult);
+            return { ...dcfResult, intrinsic_value_per_share: 0, upside_pct: 0, value_equity: 0, value_operating_assets: 0 };
+        }
+        return dcfResult;
     }, [inputs]);
-    const sensitivity = useMemo(() => sensitivityTable(inputs), [inputs]);
+    const sensitivity = useMemo(() => {
+        if (!inputs.revenue_base || !inputs.shares_outstanding) return { growthValues: [], waccValues: [], matrix: [] };
+        return sensitivityTable(inputs);
+    }, [inputs]);
 
     const { intrinsic_value_per_share, upside_pct, value_equity, value_operating_assets, pv_terminal_value, pv_cf_10years, yearByYear } = result;
 
-    const isUndervalued = inputs.current_price && intrinsic_value_per_share > inputs.current_price;
+    const currentPriceNum = Number(inputs.current_price) || 0;
+    const isUndervalued = currentPriceNum > 0 && intrinsic_value_per_share > currentPriceNum;
 
     if (showLanding) {
         return (
@@ -1060,36 +1172,192 @@ export default function App() {
 
                         <div className="mt-8 space-y-4">
                             <Section title="Company Basics" icon={Building2} isDarkMode={darkMode}>
-                                <InputField label="Name" type="text" value={inputs.company_name} onChange={(v) => handleInputChange('company_name', v)} isAi={aiGenerated['company_name']} aiData={aiDetails['company_name']} onOverride={() => clearAiBadge('company_name')} onShowSource={setPreviewSource} isDarkMode={darkMode} />
+                                <InputField
+                                    label="Name"
+                                    type="text"
+                                    value={inputs.company_name}
+                                    onChange={(v) => handleInputChange('company_name', v)}
+                                    aiData={aiDetails['company_name']}
+                                    onOverride={() => clearAiBadge('company_name')}
+                                    tooltip="Official registered name of the company on NSE/BSE."
+                                    onShowSource={setPreviewSource}
+                                    isDarkMode={darkMode}
+                                    placeholder="e.g. Reliance Industries Limited"
+                                />
                                 <div className="grid grid-cols-2 gap-4">
-                                    <InputField label="Ticker" type="text" value={inputs.ticker} onChange={(v) => handleInputChange('ticker', v)} isAi={aiGenerated['ticker']} aiData={aiDetails['ticker']} onOverride={() => clearAiBadge('ticker')} onShowSource={setPreviewSource} isDarkMode={darkMode} />
-                                    <InputField label="Price (₹)" value={inputs.current_price} onChange={(v) => handleInputChange('current_price', v)} isAi={false} helperText="Enter manually" onShowSource={setPreviewSource} isDarkMode={darkMode} />
+                                    <InputField
+                                        label="Ticker"
+                                        type="text"
+                                        value={inputs.ticker}
+                                        onChange={(v) => handleInputChange('ticker', v)}
+                                        aiData={aiDetails['ticker']}
+                                        onOverride={() => clearAiBadge('ticker')}
+                                        tooltip="The stock symbol used to identify the company on the exchange (e.g. INFY.NS)"
+                                        onShowSource={setPreviewSource}
+                                        isDarkMode={darkMode}
+                                        placeholder="TICKER.NS"
+                                    />
+                                    <InputField
+                                        label="Price (₹)"
+                                        value={inputs.current_price}
+                                        onChange={(v) => handleInputChange('current_price', v)}
+                                        isAi={false}
+                                        tooltip="Current market price per share in INR. Used to calculate upside/downside."
+                                        helperText="Enter manually"
+                                        onShowSource={setPreviewSource}
+                                        isDarkMode={darkMode}
+                                    />
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
-                                    <InputField label="Shares (Cr)" value={inputs.shares_outstanding} onChange={(v) => handleInputChange('shares_outstanding', v)} isAi={aiGenerated['shares_outstanding']} aiData={aiDetails['shares_outstanding']} onOverride={() => clearAiBadge('shares_outstanding')} onShowSource={setPreviewSource} isDarkMode={darkMode} />
-                                    <InputField label="Cash (₹ Cr)" value={inputs.cash} onChange={(v) => handleInputChange('cash', v)} isAi={aiGenerated['cash']} aiData={aiDetails['cash']} onOverride={() => clearAiBadge('cash')} onShowSource={setPreviewSource} isDarkMode={darkMode} />
+                                    <InputField
+                                        label="Shares (Cr)"
+                                        value={inputs.shares_outstanding}
+                                        onChange={(v) => handleInputChange('shares_outstanding', v)}
+                                        aiData={aiDetails['shares_outstanding']}
+                                        onOverride={() => clearAiBadge('shares_outstanding')}
+                                        tooltip="Total number of outstanding shares in Crores. Crucial for per-share valuation."
+                                        onShowSource={setPreviewSource}
+                                        isDarkMode={darkMode}
+                                    />
+                                    <InputField
+                                        label="Cash (₹ Cr)"
+                                        value={inputs.cash}
+                                        onChange={(v) => handleInputChange('cash', v)}
+                                        aiData={aiDetails['cash']}
+                                        onOverride={() => clearAiBadge('cash')}
+                                        tooltip="Total cash and cash equivalents on the balance sheet in INR Crores."
+                                        onShowSource={setPreviewSource}
+                                        isDarkMode={darkMode}
+                                    />
                                 </div>
-                                <InputField label="Debt (₹ Cr)" value={inputs.debt} onChange={(v) => handleInputChange('debt', v)} isAi={aiGenerated['debt']} aiData={aiDetails['debt']} onOverride={() => clearAiBadge('debt')} onShowSource={setPreviewSource} isDarkMode={darkMode} />
+                                <InputField
+                                    label="Debt (₹ Cr)"
+                                    value={inputs.debt}
+                                    onChange={(v) => handleInputChange('debt', v)}
+                                    aiData={aiDetails['debt']}
+                                    onOverride={() => clearAiBadge('debt')}
+                                    tooltip="Total interest-bearing debt (short-term + long-term) in INR Crores."
+                                    onShowSource={setPreviewSource}
+                                    isDarkMode={darkMode}
+                                />
                             </Section>
 
                             <Section title="Growth" icon={Activity} isDarkMode={darkMode}>
-                                <InputField label="Rev Growth Yr 1" type="range" min={0} max={0.4} step={0.01} value={inputs.revenue_growth_yr1} onChange={(v) => handleInputChange('revenue_growth_yr1', v)} isAi={aiGenerated['revenue_growth_yr1']} aiData={aiDetails['revenue_growth_yr1']} onOverride={() => clearAiBadge('revenue_growth_yr1')} isPercentage={true} onShowSource={setPreviewSource} isDarkMode={darkMode} />
-                                <InputField label="Rev Growth Yr 2-5" type="range" min={0} max={0.4} step={0.01} value={inputs.revenue_growth_yr2_5} onChange={(v) => handleInputChange('revenue_growth_yr2_5', v)} isAi={aiGenerated['revenue_growth_yr2_5']} aiData={aiDetails['revenue_growth_yr2_5']} onOverride={() => clearAiBadge('revenue_growth_yr2_5')} isPercentage={true} onShowSource={setPreviewSource} isDarkMode={darkMode} />
+                                <InputField
+                                    label="Rev Growth Yr 1"
+                                    type="range"
+                                    min={0}
+                                    max={0.4}
+                                    step={0.01}
+                                    value={inputs.revenue_growth_yr1}
+                                    onChange={(v) => handleInputChange('revenue_growth_yr1', v)}
+                                    aiData={aiDetails['revenue_growth_yr1']}
+                                    onOverride={() => clearAiBadge('revenue_growth_yr1')}
+                                    tooltip="Estimated year-over-year revenue growth for the immediate next year."
+                                    isPercentage={true}
+                                    onShowSource={setPreviewSource}
+                                    isDarkMode={darkMode}
+                                />
+                                <InputField
+                                    label="Rev Growth Yr 2-5"
+                                    type="range"
+                                    min={0}
+                                    max={0.4}
+                                    step={0.01}
+                                    value={inputs.revenue_growth_yr2_5}
+                                    onChange={(v) => handleInputChange('revenue_growth_yr2_5', v)}
+                                    aiData={aiDetails['revenue_growth_yr2_5']}
+                                    onOverride={() => clearAiBadge('revenue_growth_yr2_5')}
+                                    tooltip="Compound annual growth rate (CAGR) expected for years 2 through 5."
+                                    isPercentage={true}
+                                    onShowSource={setPreviewSource}
+                                    isDarkMode={darkMode}
+                                />
                             </Section>
 
                             <Section title="Profitability" icon={Target} isDarkMode={darkMode}>
-                                <InputField label="Target Margin" type="range" min={0} max={0.6} step={0.01} value={inputs.operating_margin_target} onChange={(v) => handleInputChange('operating_margin_target', v)} isAi={aiGenerated['operating_margin_target']} aiData={aiDetails['operating_margin_target']} onOverride={() => clearAiBadge('operating_margin_target')} isPercentage={true} onShowSource={setPreviewSource} isDarkMode={darkMode} />
-                                <div className="mb-4">
-                                    <label className={cn("text-[11px] font-medium uppercase tracking-wider block mb-1.5", darkMode ? "text-slate-400" : "text-slate-600")}>Margin Convergence</label>
-                                    <select className={cn("w-full glass-input", darkMode ? "" : "bg-white border-[#CBD5E1] text-[#0F172A] placeholder:text-slate-300 shadow-sm")} value={inputs.margin_convergence_year} onChange={(e) => handleInputChange('margin_convergence_year', parseInt(e.target.value))}>
-                                        {[3, 5, 7, 10].map(y => <option key={y} value={y}>{y} Years</option>)}
-                                    </select>
+                                <InputField
+                                    label="Base Margin"
+                                    type="number"
+                                    value={inputs.operating_margin_base}
+                                    onChange={(v) => handleInputChange('operating_margin_base', v)}
+                                    aiData={aiDetails['operating_margin_base']}
+                                    onOverride={() => clearAiBadge('operating_margin_base')}
+                                    tooltip="Current operating margin (EBIT / Revenue). Used as the starting point for convergence."
+                                    isPercentage={true}
+                                    onShowSource={setPreviewSource}
+                                    isDarkMode={darkMode}
+                                />
+                                <InputField
+                                    label="Target Margin"
+                                    type="range"
+                                    min={0}
+                                    max={0.6}
+                                    step={0.01}
+                                    value={inputs.operating_margin_target}
+                                    onChange={(v) => handleInputChange('operating_margin_target', v)}
+                                    aiData={aiDetails['operating_margin_target']}
+                                    onOverride={() => clearAiBadge('operating_margin_target')}
+                                    tooltip="Target operating margin (EBIT / Revenue) the company is expected to converge to."
+                                    isPercentage={true}
+                                    onShowSource={setPreviewSource}
+                                    isDarkMode={darkMode}
+                                />
+                                <div className="grid grid-cols-2 gap-4">
+                                    <InputField
+                                        label="S/C Ratio (1-5)"
+                                        value={inputs.sales_to_capital_1_5}
+                                        onChange={(v) => handleInputChange('sales_to_capital_1_5', v)}
+                                        aiData={aiDetails['sales_to_capital_1_5']}
+                                        onOverride={() => clearAiBadge('sales_to_capital_1_5')}
+                                        tooltip="Sales-to-Capital ratio for years 1-5. Measures reinvestment efficiency (higher = more efficient)."
+                                        onShowSource={setPreviewSource}
+                                        isDarkMode={darkMode}
+                                    />
+                                    <InputField
+                                        label="S/C Ratio (6-10)"
+                                        value={inputs.sales_to_capital_6_10}
+                                        onChange={(v) => handleInputChange('sales_to_capital_6_10', v)}
+                                        aiData={aiDetails['sales_to_capital_6_10']}
+                                        onOverride={() => clearAiBadge('sales_to_capital_6_10')}
+                                        tooltip="Sales-to-Capital ratio for years 6-10. Usually converges to industry average."
+                                        onShowSource={setPreviewSource}
+                                        isDarkMode={darkMode}
+                                    />
                                 </div>
                             </Section>
 
-                            <Section title="Risk" icon={Shield} isDarkMode={darkMode}>
-                                <InputField label="WACC" type="range" min={0.09} max={0.20} step={0.001} value={inputs.wacc} onChange={(v) => handleInputChange('wacc', v)} isAi={aiGenerated['wacc']} aiData={aiDetails['wacc']} onOverride={() => clearAiBadge('wacc')} isPercentage={true} onShowSource={setPreviewSource} isDarkMode={darkMode} />
-                                <InputField label="Risk-Free Rate" type="range" min={0.01} max={0.10} step={0.001} value={inputs.riskfree_rate} onChange={(v) => handleInputChange('riskfree_rate', v)} isAi={aiGenerated['riskfree_rate']} aiData={aiDetails['riskfree_rate']} onOverride={() => clearAiBadge('riskfree_rate')} isPercentage={true} onShowSource={setPreviewSource} isDarkMode={darkMode} />
+                            <Section title="Risk (WACC)" icon={Shield} isDarkMode={darkMode}>
+                                <InputField
+                                    label="WACC"
+                                    type="range"
+                                    min={0.09}
+                                    max={0.20}
+                                    step={0.001}
+                                    value={inputs.wacc}
+                                    onChange={(v) => handleInputChange('wacc', v)}
+                                    aiData={aiDetails['wacc']}
+                                    onOverride={() => clearAiBadge('wacc')}
+                                    tooltip="Weighted Average Cost of Capital. The discount rate used to value future cash flows."
+                                    isPercentage={true}
+                                    onShowSource={setPreviewSource}
+                                    isDarkMode={darkMode}
+                                />
+                                <InputField
+                                    label="Risk-Free Rate"
+                                    type="range"
+                                    min={0.01}
+                                    max={0.10}
+                                    step={0.001}
+                                    value={inputs.riskfree_rate}
+                                    onChange={(v) => handleInputChange('riskfree_rate', v)}
+                                    aiData={aiDetails['riskfree_rate']}
+                                    onOverride={() => clearAiBadge('riskfree_rate')}
+                                    tooltip="Typically the yield on 10-year Government Securities (G-Sec) in India."
+                                    isPercentage={true}
+                                    onShowSource={setPreviewSource}
+                                    isDarkMode={darkMode}
+                                />
                             </Section>
                         </div>
                     </div>
@@ -1109,13 +1377,13 @@ export default function App() {
                                 <h2 className="text-slate-500 font-bold tracking-[0.2em] uppercase text-[11px] mb-4">Intrinsic Value Per Share</h2>
                                 <div className={cn(
                                     "text-8xl lg:text-[72px] font-bold font-mono tracking-tighter mb-4 drop-shadow-2xl",
-                                    !inputs.current_price ? (darkMode ? "text-white" : "text-[#0F172A]") :
+                                    !currentPriceNum ? (darkMode ? "text-white" : "text-[#0F172A]") :
                                         (isUndervalued ? "text-positive" : "text-negative")
                                 )}>
-                                    <CountUp value={intrinsic_value_per_share} prefix="₹" />
+                                    <CountUp value={Number(intrinsic_value_per_share)} prefix="₹" />
                                 </div>
                                 <div className="flex items-center gap-4 mb-4">
-                                    <span className="text-slate-500 text-sm font-medium">Market: <span className={cn("font-mono", darkMode ? "text-slate-400" : "text-slate-600")}>{inputs.current_price ? `₹${Number(inputs.current_price).toFixed(2)}` : <span className={cn("italic", darkMode ? "text-slate-600" : "text-slate-400")}>Enter price to see upside/downside</span>}</span></span>
+                                    <span className={cn("text-sm font-semibold transition-colors", darkMode ? "text-slate-500" : "text-slate-600")}>Market: <span className={cn("font-mono", darkMode ? "text-slate-400" : "text-slate-700")}>{inputs.current_price ? `₹${Number(inputs.current_price).toFixed(2)}` : <span className={cn("italic font-medium", darkMode ? "text-slate-600" : "text-slate-400")}>Enter price manually to compare</span>}</span></span>
                                     {inputs.current_price && (
                                         <span className={cn(
                                             "px-3 py-1 rounded-full text-xs font-bold ring-1",
@@ -1125,7 +1393,7 @@ export default function App() {
                                         </span>
                                     )}
                                 </div>
-                                <p className={cn("text-[11px] font-medium italic max-w-sm", darkMode ? "text-slate-500" : "text-slate-400")}>Valuation models are highly sensitive to inputs. Use for educational purposes only.</p>
+                                <p className={cn("text-[11px] font-bold italic max-w-sm uppercase tracking-tighter transition-colors", darkMode ? "text-slate-600" : "text-slate-400")}>Note: Results depend heavily on terminal growth & WACC.</p>
                             </div>
 
                             <div className="flex flex-wrap items-center justify-center gap-3">
@@ -1206,7 +1474,7 @@ export default function App() {
                                     darkMode ? "bg-positive/5 border-positive/20" : "bg-white border-positive"
                                 )}>
                                     <span className={cn("text-[10px] font-bold uppercase block mb-1", darkMode ? "text-slate-500" : "text-slate-400")}>Cash</span>
-                                    <span className="text-xl font-mono font-bold text-positive">₹{(Math.round(inputs.cash)).toLocaleString()} Cr</span>
+                                    <span className="text-xl font-mono font-bold text-positive">₹{Math.round(Number(inputs.cash) || 0).toLocaleString()} Cr</span>
                                 </div>
 
                                 <Plus className={cn("w-3 h-3", darkMode ? "text-slate-700" : "text-slate-400")} />
@@ -1216,7 +1484,7 @@ export default function App() {
                                     darkMode ? "bg-positive/5 border-positive/20" : "bg-white border-positive"
                                 )}>
                                     <span className={cn("text-[10px] font-bold uppercase block mb-1", darkMode ? "text-slate-500" : "text-slate-400")}>Other Assets</span>
-                                    <span className="text-xl font-mono font-bold text-positive">₹{(Math.round(inputs.non_operating_assets)).toLocaleString()} Cr</span>
+                                    <span className="text-xl font-mono font-bold text-positive">₹{Math.round(Number(inputs.non_operating_assets) || 0).toLocaleString()} Cr</span>
                                 </div>
 
                                 <Minus className={cn("w-3 h-3", darkMode ? "text-slate-700" : "text-slate-400")} />
@@ -1226,7 +1494,7 @@ export default function App() {
                                     darkMode ? "bg-negative/5 border-negative/20" : "bg-white border-negative"
                                 )}>
                                     <span className={cn("text-[10px] font-bold uppercase block mb-1", darkMode ? "text-slate-500" : "text-slate-400")}>Debt</span>
-                                    <span className="text-xl font-mono font-bold text-negative">₹{(Math.round(inputs.debt)).toLocaleString()} Cr</span>
+                                    <span className="text-xl font-mono font-bold text-negative">₹{Math.round(Number(inputs.debt) || 0).toLocaleString()} Cr</span>
                                 </div>
 
                                 <ArrowRight className={cn("w-3 h-3 hidden lg:block", darkMode ? "text-slate-700" : "text-slate-400")} />
@@ -1240,7 +1508,7 @@ export default function App() {
                                 </div>
                             </div>
                             <p className={cn("mt-8 text-center text-xs font-medium tracking-tight", darkMode ? "text-slate-500" : "text-slate-400")}>
-                                Divide by <span className={cn("font-mono", darkMode ? "text-slate-300" : "text-slate-600")}>{(inputs.shares_outstanding).toFixed(1)} Cr</span> shares = <span className="text-brand font-mono font-bold">₹{intrinsic_value_per_share.toFixed(2)}</span> per share
+                                Divide by <span className={cn("font-mono", darkMode ? "text-slate-300" : "text-slate-600")}>{Number(inputs.shares_outstanding || 0).toFixed(1)} Cr</span> shares = <span className="text-brand font-mono font-bold">₹{Number(intrinsic_value_per_share || 0).toFixed(2)}</span> per share
                             </p>
                         </div>
 
@@ -1279,7 +1547,7 @@ export default function App() {
                                                     const val = row[gi];
                                                     const isBase = gi === 2 && wi === 2;
                                                     const baseVal = sensitivity.matrix[2][2];
-                                                    const diff = (val / baseVal) - 1;
+                                                    const diff = (baseVal && baseVal !== 0) ? (val / baseVal) - 1 : 0;
 
                                                     return (
                                                         <td

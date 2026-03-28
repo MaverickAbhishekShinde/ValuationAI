@@ -608,9 +608,32 @@ export default function ValuationApp() {
             Return ONLY valid JSON. No markdown, no explanation outside the JSON.
             All values must be realistic.`;
 
-            const userPrompt = `Generate DCF valuation assumptions for ${queryWithSuffix}.`;
+            const userPrompt = `Generate DCF valuation assumptions for ${queryWithSuffix}.
+            Return this exact JSON structure:
+            {
+              "company_name": "string",
+              "ticker": "string", 
+              "shares_outstanding": number,
+              "revenue_base": number,
+              "ebit_base": number,
+              "cash": number,
+              "debt": number,
+              "minority_interests": number,
+              "non_operating_assets": number,
+              "revenue_growth_yr1": { "value": number, "confidence": "high"|"medium"|"low", "reasoning": "string max 100 chars" },
+              "revenue_growth_yr2_5": { "value": number, "confidence": "high"|"medium"|"low", "reasoning": "string max 100 chars" },
+              "operating_margin_base": { "value": number, "reasoning": "string" },
+              "operating_margin_target": { "value": number, "confidence": "high"|"medium"|"low", "reasoning": "string max 100 chars" },
+              "margin_convergence_year": { "value": number, "reasoning": "string" },
+              "sales_to_capital_1_5": { "value": number, "confidence": "high"|"medium"|"low", "reasoning": "string max 100 chars" },
+              "wacc": { "value": number, "confidence": "high"|"medium"|"low", "reasoning": "string max 100 chars" },
+              "riskfree_rate": { "value": number, "reasoning": "string" },
+              "tax_rate_effective": { "value": number, "reasoning": "string" },
+              "tax_rate_marginal": { "value": number, "reasoning": "string" },
+              "prob_failure": { "value": number, "reasoning": "string" },
+              "narrative": "2-3 sentence bull case story for this company"
+            }`;
 
-            const result = await model.generateContent([systemPrompt, userPrompt]);
             const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
                 method: 'POST',
                 headers: {
@@ -618,7 +641,7 @@ export default function ValuationApp() {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    model: 'llama-3.1-8b-instant',
+                    model: 'llama-3.3-70b-versatile',
                     messages: [
                         { role: 'system', content: systemPrompt },
                         { role: 'user', content: userPrompt }
@@ -628,6 +651,11 @@ export default function ValuationApp() {
                 })
             });
             const groqData = await groqResponse.json();
+            
+            if (groqData.error) {
+                throw new Error(groqData.error.message || "Groq API Error");
+            }
+            
             let text = groqData.choices[0].message.content;
 
             let data;
@@ -778,8 +806,8 @@ export default function ValuationApp() {
                     <div className="p-4 lg:p-10 text-center lg:text-left">
                         <div className="mb-12">
                             <h2 className="text-slate-500 font-bold uppercase text-[11px] mb-4 tracking-widest">Intrinsic Value</h2>
-                            <div className={cn("text-8xl font-bold font-mono tracking-tighter mb-4", !inputs.current_price ? (darkMode ? "text-white" : "text-[#0F172A]") : (isUndervalued ? "text-positive" : "text-negative"))}>
-                                <CountUp value={intrinsic_value_per_share} prefix="₹" />
+                            <div className={cn("text-8xl font-bold font-mono tracking-tighter mb-4", !Number(inputs.current_price || 0) ? (darkMode ? "text-white" : "text-[#0F172A]") : (Number(intrinsic_value_per_share || 0) > Number(inputs.current_price || 0) ? "text-positive" : "text-negative"))}>
+                                <CountUp value={Number(intrinsic_value_per_share || 0)} prefix="₹" />
                             </div>
                         </div>
 

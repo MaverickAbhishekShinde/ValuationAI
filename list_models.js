@@ -1,20 +1,22 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-const key = process.env.VITE_GEMINI_API_KEY;
-console.log("Using key starting with:", key ? key.substring(0, 5) : "MISSING");
+const key = process.env.VITE_GROQ_API_KEY;
+console.log("Using Groq key starting with:", key ? key.substring(0, 5) : "MISSING");
 
-async function listModels() {
+async function listGroqModels() {
     try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${key}`;
-        const response = await fetch(url);
+        const response = await fetch('https://api.groq.com/openai/v1/models', {
+            headers: {
+                'Authorization': `Bearer ${key}`
+            }
+        });
         const data = await response.json();
-        console.log("Available Models:", JSON.stringify(data, null, 2));
+        console.log("Groq Models:", data.data?.map(m => m.id).join(', '));
     } catch (error) {
-        console.error("List Models Error:", error);
+        console.error("List Groq Models Error:", error);
     }
 }
 
-listModels();
+listGroqModels();
