@@ -200,8 +200,8 @@ export function runDCF(inputs) {
 
     const valueEquity =
         adjustedValue - debt - minority_interests + cash + non_operating_assets;
-    const intrinsicValuePerShare = valueEquity / shares_outstanding;
-    const upsidePct = intrinsicValuePerShare / current_price - 1;
+    const intrinsicValuePerShare = shares_outstanding > 0 ? (valueEquity / shares_outstanding) : 0;
+    const upsidePct = (current_price > 0 && intrinsicValuePerShare > 0) ? (intrinsicValuePerShare / current_price - 1) : 0;
 
     return {
         intrinsic_value_per_share: intrinsicValuePerShare,
