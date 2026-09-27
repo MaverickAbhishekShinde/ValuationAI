@@ -4,7 +4,7 @@
  * Run:  node dcfEngine.test.js
  */
 
-import { runDCF, sensitivityTable } from './dcfEngine.js';
+import { runDCF, sensitivityTable } from './src/dcfEngine.js';
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 

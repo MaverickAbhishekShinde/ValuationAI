@@ -42,6 +42,7 @@ import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import * as pdfjsLib from 'pdfjs-dist';
 import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.mjs?url';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { RAGEngine, chunkText } from './ragEngine';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
@@ -610,25 +611,35 @@ export default function ValuationApp() {
 
             const userPrompt = `Generate DCF valuation assumptions for ${queryWithSuffix}.`;
 
-            const result = await model.generateContent([systemPrompt, userPrompt]);
-            const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${import.meta.env.VITE_GROQ_API_KEY}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    model: 'llama-3.1-8b-instant',
-                    messages: [
-                        { role: 'system', content: systemPrompt },
-                        { role: 'user', content: userPrompt }
-                    ],
-                    temperature: 0.3,
-                    max_tokens: 1000
-                })
-            });
-            const groqData = await groqResponse.json();
-            let text = groqData.choices[0].message.content;
+            const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+            if (!apiKey) {
+                setAiError("Gemini API key is missing. Please create a .env file and set VITE_GEMINI_API_KEY.");
+                setIsLoadingAI(false);
+                return;
+            }
+
+            const genAI = new GoogleGenerativeAI(apiKey);
+            const candidateModels = ["gemini-flash-latest", "gemini-3.7-flash", "gemini-3.5-flash", "gemini-3.8-flash"];
+            let response = null;
+            let lastError = null;
+
+            for (const modelName of candidateModels) {
+                try {
+                    const model = genAI.getGenerativeModel({ model: modelName });
+                    const result = await model.generateContent([systemPrompt, userPrompt]);
+                    response = await result.response;
+                    if (response) break;
+                } catch (err) {
+                    console.warn(`Model ${modelName} failed, trying next fallback:`, err.message);
+                    lastError = err;
+                }
+            }
+
+            if (!response) {
+                throw lastError || new Error("All Gemini candidate models failed to generate content.");
+            }
+
+            let text = response.text();
 
             let data;
             try {

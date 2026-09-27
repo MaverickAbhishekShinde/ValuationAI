@@ -42,6 +42,7 @@ import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import * as pdfjsLib from 'pdfjs-dist';
 import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.mjs?url';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { RAGEngine, chunkText } from './ragEngine';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
@@ -655,8 +656,34 @@ export default function App() {
               "narrative": "2-3 sentence bull case story for this company"
             }`;
 
-            const result = await model.generateContent([systemPrompt, userPrompt]);
-            const response = await result.response;
+            const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+            if (!apiKey) {
+                setAiError("Gemini API key is missing. Please create a .env file and set VITE_GEMINI_API_KEY.");
+                setIsLoadingAI(false);
+                return;
+            }
+
+            const genAI = new GoogleGenerativeAI(apiKey);
+            const candidateModels = ["gemini-flash-latest", "gemini-3.7-flash", "gemini-3.5-flash", "gemini-3.8-flash"];
+            let response = null;
+            let lastError = null;
+
+            for (const modelName of candidateModels) {
+                try {
+                    const model = genAI.getGenerativeModel({ model: modelName });
+                    const result = await model.generateContent([systemPrompt, userPrompt]);
+                    response = await result.response;
+                    if (response) break;
+                } catch (err) {
+                    console.warn(`Model ${modelName} failed, trying next fallback:`, err.message);
+                    lastError = err;
+                }
+            }
+
+            if (!response) {
+                throw lastError || new Error("All Gemini candidate models failed to generate content.");
+            }
+
             let text = response.text();
 
             let data;
